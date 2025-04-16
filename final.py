@@ -1,16 +1,10 @@
 import pg8000
 import pandas
-from getpass import getpass
+from connectToDB import Connection
 
 df = pandas.read_csv("universal_top_spotify_songs.csv")
 
-connection = pg8000.connect(
-    user="colinmyers",  
-    password=getpass(),
-    host="ada.mines.edu",
-    port=5432,
-    database="csci403"
-)
+connection = connectToDB.Connection
 
 cursor = connection.cursor()
 
