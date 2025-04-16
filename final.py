@@ -50,8 +50,10 @@ insert_query = """
         acousticness, instrumentalness, liveness, valence, tempo, time_signature
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
-print("DONE")
+
+print("LOADING")
 cursor.executemany(insert_query, values)
+print("DONE")
 
 connection.commit()
 cursor.close()
