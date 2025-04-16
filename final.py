@@ -1,6 +1,6 @@
 import pg8000
 import pandas
-from connectToDB import Connection
+import Connection from connectToDB 
 
 df = pandas.read_csv("universal_top_spotify_songs.csv")
 
