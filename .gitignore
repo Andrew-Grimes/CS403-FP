@@ -1,4 +1,4 @@
 *.csv
-connectToDB.py
+Connection.py
 /__pycache__/
 /CSV
