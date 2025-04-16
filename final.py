@@ -1,10 +1,10 @@
 import pg8000
 import pandas
-import connectToDB 
+import Connection 
 
 df = pandas.read_csv("universal_top_spotify_songs.csv")
 
-connection = connectToDB.Connection
+connection = Connection.Connection().get_connection()
 
 cursor = connection.cursor()
 
