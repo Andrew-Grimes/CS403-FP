@@ -3,11 +3,8 @@ import pandas
 import Connection 
 
 df = pandas.read_csv("universal_top_spotify_songs.csv")
-
 connection = Connection.Connection().get_connection()
-
 cursor = connection.cursor()
-
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS spotify_songs (
@@ -38,6 +35,7 @@ cursor.execute("""
         time_signature INTEGER
     )
 """)
+
 print("table made")
 df = df.where(pandas.notnull(df), None)
 values = [tuple(row) for row in df.itertuples(index=False, name=None)]
