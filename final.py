@@ -36,7 +36,7 @@ cursor.execute("""
     )
 """)
 
-print("table made")
+print("TABLE MADE")
 df = df.where(pandas.notnull(df), None)
 values = [tuple(row) for row in df.itertuples(index=False, name=None)]
 
@@ -49,7 +49,7 @@ insert_query = """
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
-print("LOADING")
+print("LOADING...")
 cursor.executemany(insert_query, values)
 print("DONE")
 
