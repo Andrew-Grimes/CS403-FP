@@ -1,4 +1,5 @@
-*.csv
-Connection.py
-/__pycache__/
 /CSV
+*.csv
+/__pycache__/
+*.pyc
+Connection.py

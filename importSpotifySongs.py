@@ -49,7 +49,7 @@ insert_query = """
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
-print("LOADING")
+print("LOADING...")
 cursor.executemany(insert_query, values)
 print("DONE")
 

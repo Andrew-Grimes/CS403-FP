@@ -3,11 +3,8 @@ import pandas
 import Connection 
 
 df = pandas.read_csv("World-happiness-report-2024.csv")
-
 connection = Connection.Connection().get_connection()
-
 cursor = connection.cursor()
-
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS world_happiness (
@@ -25,6 +22,7 @@ cursor.execute("""
         negative_affect NUMERIC
     )
 """)
+
 print("table made")
 df = df.where(pandas.notnull(df), None)
 values = [tuple(row) for row in df.itertuples(index=False, name=None)]
@@ -45,7 +43,8 @@ insert_query = """
         negative_affect
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
-print("LOADING")
+
+print("LOADING...")
 cursor.executemany(insert_query, values)
 print("DONE")
 
