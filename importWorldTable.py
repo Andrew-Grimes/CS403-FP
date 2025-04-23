@@ -7,6 +7,8 @@ connection = Connection.Connection().get_connection()
 cursor = connection.cursor()
 
 cursor.execute("""
+    SET ROLE group42;
+
     CREATE TABLE IF NOT EXISTS world_happiness (
         country_name TEXT,
         regional_indicator TEXT,
