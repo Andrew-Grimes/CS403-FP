@@ -48,8 +48,8 @@ CREATE TABLE staging_happiness (
 );
 
 --- load the csv's
-\copy staging_spotify FROM '/CS403-FP/universal_top_spotify_songs.csv' CSV HEADER;
-\copy staging_happiness FROM '/CS403-FP/World-happiness-report-updated_2024.csv' CSV HEADER;
+\copy staging_spotify FROM './CS403-FP/universal_top_spotify_songs.csv' CSV HEADER;
+\copy staging_happiness FROM './CS403-FP/World-happiness-report-updated_2024.csv' CSV HEADER;
 
 --- raw values
 SELECT DISTINCT country FROM staging_spotify ORDER BY country;
