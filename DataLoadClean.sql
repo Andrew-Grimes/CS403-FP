@@ -92,7 +92,7 @@ ALTER TABLE staging_spotify
     ALTER COLUMN is_explicit TYPE BOOLEAN USING (is_explicit='True'),
     ALTER COLUMN duration_ms TYPE INTEGER USING duration_ms::INTEGER,
     ALTER COLUMN danceability TYPE REAL USING danceability::REAL,
-    ALTER COLUMN energy TYPE REAL USING energy::REAL;
+    ALTER COLUMN energy TYPE REAL USING energy::REAL,
     ALTER COLUMN key TYPE INTEGER USING key::INTEGER,
     ALTER COLUMN loudness TYPE REAL USING loudness::REAL,
     ALTER COLUMN mode TYPE INTEGER USING mode::INTEGER,
