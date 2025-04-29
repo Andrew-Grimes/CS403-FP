@@ -3,6 +3,13 @@
 
 --- DELIVERABLE 1 - DATA LOADING AND CLEANING (LN 4-123)
 --- spotify table for data cleaning
+
+DROP TABLE IF EXISTS
+clean_spotify,
+clean_happiness,
+staging_spotify,
+staging_happiness;
+
 SET search_path TO group42;
 
 CREATE TABLE staging_spotify (
@@ -53,34 +60,37 @@ CREATE TABLE staging_happiness (
 \copy staging_spotify FROM './CS403-FP/universal_top_spotify_songs.csv' CSV HEADER;
 \copy staging_happiness FROM './CS403-FP/World-happiness-report-updated_2024.csv' CSV HEADER;
 
+--- row count before
+SELECT COUNT(*) AS spotify_rows   FROM staging_spotify;
+SELECT COUNT(*) AS happiness_rows FROM staging_happiness;
+
 --- raw values
 SELECT DISTINCT country FROM staging_spotify ORDER BY country;
 SELECT DISTINCT country_name FROM staging_happiness ORDER BY country_name;
 SELECT DISTINCT snapshot_date FROM staging_spotify ORDER BY snapshot_date LIMIT 20;
 
 -- standardize data countries
-CREATE TEMP TABLE country_map(abbrev TEXT, fullname TEXT);
-INSERT INTO country_map VALUES
-    ('US','United States'),
-    ('U.S.','United States'),
-    ('UK','United Kingdom');
+UPDATE staging_spotify
+SET country = CASE
+    WHEN country IN ('US','U.S.') THEN 'United States'
+    WHEN country = 'UK' THEN 'United Kingdom'
+    ELSE INITCAP(country)
+END;
 
-UPDATE staging_spotify s
-    SET country = m.fullname
-    FROM country_map m
-    WHERE s.country = m.abbrev;
-
-UPDATE staging_happiness h
-    SET country_name = m.fullname
-    FROM country_map m
-    WHERE h.country_name = m.abbrev;
+-- Normalize country names in staging_happiness
+UPDATE staging_happiness
+SET country_name = CASE
+    WHEN country_name IN ('US','U.S.') THEN 'United States'
+    WHEN country_name = 'UK' THEN 'United Kingdom'
+    ELSE INITCAP(country_name)
+END;
 
 --- standardize data dates
 ALTER TABLE staging_spotify ADD COLUMN snapshot_date_clean DATE;
 UPDATE staging_spotify
-    SET snapshot_date_clean = TO_DATE(snapshot_date,'MM/DD/YYYY');
-ALTER TABLE staging_spotify 
-    DROP COLUMN snapshot_date;
+SET snapshot_date_clean = TO_DATE(snapshot_date,'MM/DD/YYYY');
+ALTER TABLE staging_spotify
+    DROP COLUMN snapshot_date,
     RENAME COLUMN snapshot_date_clean TO snapshot_date;
 
 --- data casting spotify table
@@ -91,6 +101,7 @@ ALTER TABLE staging_spotify
     ALTER COLUMN popularity TYPE INTEGER USING popularity::INTEGER,
     ALTER COLUMN is_explicit TYPE BOOLEAN USING (is_explicit='True'),
     ALTER COLUMN duration_ms TYPE INTEGER USING duration_ms::INTEGER,
+    ALTER COLUMN album_release_date TYPE DATE USING TO_DATE(album_release_date,'YYYY-MM-DD'),
     ALTER COLUMN danceability TYPE REAL USING danceability::REAL,
     ALTER COLUMN energy TYPE REAL USING energy::REAL,
     ALTER COLUMN key TYPE INTEGER USING key::INTEGER,
@@ -123,3 +134,7 @@ SELECT * FROM staging_happiness WHERE country_name  IS NULL OR ladder_score IS N
 
 CREATE TABLE clean_spotify AS SELECT DISTINCT * FROM staging_spotify;
 CREATE TABLE clean_happiness AS SELECT DISTINCT * FROM staging_happiness;
+
+--- row count after
+SELECT COUNT(*) AS clean_spotify_rows   FROM clean_spotify;
+SELECT COUNT(*) AS clean_happiness_rows FROM clean_happiness;
