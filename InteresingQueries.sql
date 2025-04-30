@@ -91,6 +91,7 @@ FROM grouped_by_danceability
 GROUP BY danceability_group
 ORDER BY avg_popularity DESC;
 
+-- Compare the happiness score of countries with above and below average perception of corruption
 WITH corruption_categories AS (
     SELECT 
         country_name,
