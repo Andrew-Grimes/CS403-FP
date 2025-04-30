@@ -66,3 +66,47 @@ FROM classified_countries c
 JOIN clean_happiness h ON c.country = h.country_name
 GROUP BY speechiness_group
 ORDER BY avg_happiness_score DESC;
+
+WITH global_avg_danceability AS (
+    -- Calculate the global average danceability for all songs
+    SELECT AVG(danceability) AS global_avg_danceability
+    FROM clean_spotify
+),
+grouped_by_danceability AS (
+    -- Group songs based on whether their danceability is above or below the global average
+    SELECT
+        s.popularity,
+        s.danceability,
+        CASE
+            WHEN s.danceability > (SELECT global_avg_danceability FROM global_avg_danceability) THEN 'High Danceability'
+            ELSE 'Low Danceability'
+        END AS danceability_group
+    FROM clean_spotify s
+)
+-- Now calculate the average popularity for each group (low vs. high danceability)
+SELECT
+    danceability_group,
+    AVG(popularity) AS avg_popularity
+FROM grouped_by_danceability
+GROUP BY danceability_group
+ORDER BY avg_popularity DESC;
+
+WITH corruption_categories AS (
+    SELECT 
+        country_name,
+        perception_of_corruption,
+        CASE
+            WHEN perception_of_corruption <= (SELECT AVG(perception_of_corruption) FROM clean_happiness) - 0.2 THEN 'Low'
+            WHEN perception_of_corruption >= (SELECT AVG(perception_of_corruption) FROM clean_happiness) + 0.2 THEN 'High'
+            ELSE 'Medium'
+        END AS corruption_category
+    FROM clean_happiness
+)
+
+SELECT 
+    h.country_name,
+    h.ladder_score,
+    c.corruption_category
+FROM clean_happiness h
+JOIN corruption_categories c ON h.country_name = c.country_name
+ORDER BY c.corruption_category, h.ladder_score DESC;
