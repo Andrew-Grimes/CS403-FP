@@ -57,8 +57,8 @@ CREATE TABLE staging_happiness (
 );
 
 --- load the csv's
-\copy staging_spotify FROM './CS403-FP/universal_top_spotify_songs.csv' CSV HEADER;
-\copy staging_happiness FROM './CS403-FP/World-happiness-report-updated_2024.csv' CSV HEADER;
+\copy staging_spotify FROM './universal_top_spotify_songs.csv' CSV HEADER;
+\copy staging_happiness FROM './World-happiness-report-2024.csv' CSV HEADER;
 
 --- row count before
 SELECT COUNT(*) AS spotify_rows   FROM staging_spotify;
@@ -73,15 +73,86 @@ SELECT DISTINCT snapshot_date FROM staging_spotify ORDER BY snapshot_date LIMIT 
 UPDATE staging_spotify
 SET country = CASE
     WHEN country IN ('US','U.S.') THEN 'United States'
-    WHEN country = 'UK' THEN 'United Kingdom'
-    ELSE INITCAP(country)
+    WHEN country LIKE '% (UK' THEN 'United Kingdom'
+    WHEN LOWER(country) = 'ae' THEN 'United Arab Emirates'
+    WHEN LOWER(country) = 'ar' THEN 'Argentina'
+    WHEN LOWER(country) = 'at' THEN 'Austria'
+    WHEN LOWER(country) = 'au' THEN 'Australia'
+    WHEN LOWER(country) = 'be' THEN 'Belgium'
+    WHEN LOWER(country) = 'bg' THEN 'Bulgaria'
+    WHEN LOWER(country) = 'bo' THEN 'Bolivia'
+    WHEN LOWER(country) = 'br' THEN 'Brazil'
+    WHEN LOWER(country) = 'by' THEN 'Belarus'
+    WHEN LOWER(country) = 'ca' THEN 'Canada'
+    WHEN LOWER(country) = 'ch' THEN 'Switzerland'
+    WHEN LOWER(country) = 'cl' THEN 'Chile'
+    WHEN LOWER(country) = 'co' THEN 'Colombia'
+    WHEN LOWER(country) = 'cr' THEN 'Costa Rica'
+    WHEN LOWER(country) = 'cz' THEN 'Czech Republic'
+    WHEN LOWER(country) = 'de' THEN 'Germany'
+    WHEN LOWER(country) = 'dk' THEN 'Denmark'
+    WHEN LOWER(country) = 'do' THEN 'Dominican Republic'
+    WHEN LOWER(country) = 'ec' THEN 'Ecuador'
+    WHEN LOWER(country) = 'ee' THEN 'Estonia'
+    WHEN LOWER(country) = 'eg' THEN 'Egypt'
+    WHEN LOWER(country) = 'es' THEN 'Spain'
+    WHEN LOWER(country) = 'fi' THEN 'Finland'
+    WHEN LOWER(country) = 'fr' THEN 'France'
+    WHEN LOWER(country) = 'gb' THEN 'United Kingdom'
+    WHEN LOWER(country) = 'gr' THEN 'Greece'
+    WHEN LOWER(country) = 'gt' THEN 'Guatemala'
+    WHEN LOWER(country) = 'hk' THEN 'Hong Kong'
+    WHEN LOWER(country) = 'hn' THEN 'Honduras'
+    WHEN LOWER(country) = 'hu' THEN 'Hungary'
+    WHEN LOWER(country) = 'id' THEN 'Indonesia'
+    WHEN LOWER(country) = 'ie' THEN 'Ireland'
+    WHEN LOWER(country) = 'il' THEN 'Israel'
+    WHEN LOWER(country) = 'in' THEN 'India'
+    WHEN LOWER(country) = 'is' THEN 'Iceland'
+    WHEN LOWER(country) = 'it' THEN 'Italy'
+    WHEN LOWER(country) = 'jp' THEN 'Japan'
+    WHEN LOWER(country) = 'kr' THEN 'South Korea'
+    WHEN LOWER(country) = 'kz' THEN 'Kazakhstan'
+    WHEN LOWER(country) = 'lt' THEN 'Lithuania'
+    WHEN LOWER(country) = 'lu' THEN 'Luxembourg'
+    WHEN LOWER(country) = 'lv' THEN 'Latvia'
+    WHEN LOWER(country) = 'ma' THEN 'Morocco'
+    WHEN LOWER(country) = 'mx' THEN 'Mexico'
+    WHEN LOWER(country) = 'my' THEN 'Malaysia'
+    WHEN LOWER(country) = 'ng' THEN 'Nigeria'
+    WHEN LOWER(country) = 'ni' THEN 'Nicaragua'
+    WHEN LOWER(country) = 'nl' THEN 'Netherlands'
+    WHEN LOWER(country) = 'no' THEN 'Norway'
+    WHEN LOWER(country) = 'nz' THEN 'New Zealeand'
+    WHEN LOWER(country) = 'pa' THEN 'Panama'
+    WHEN LOWER(country) = 'pe' THEN 'Peru'
+    WHEN LOWER(country) = 'ph' THEN 'Philippines'
+    WHEN LOWER(country) = 'pk' THEN 'Pakistan'
+    WHEN LOWER(country) = 'pl' THEN 'Poland'
+    WHEN LOWER(country) = 'pt' THEN 'Portugal'
+    WHEN LOWER(country) = 'py' THEN 'Paraguay'
+    WHEN LOWER(country) = 'ro' THEN 'Romania'
+    WHEN LOWER(country) = 'sa' THEN 'Saudi Arabia'
+    WHEN LOWER(country) = 'se' THEN 'Sweden'
+    WHEN LOWER(country) = 'sg' THEN 'Singapore'
+    WHEN LOWER(country) = 'sk' THEN 'Slovakia'
+    WHEN LOWER(country) = 'sv' THEN 'El Salvador'
+    WHEN LOWER(country) = 'th' THEN 'Thailand'
+    WHEN LOWER(country) = 'tr' THEN 'Turkey'
+    WHEN LOWER(country) = 'tw' THEN 'Taiwan'
+    WHEN LOWER(country) = 'ua' THEN 'Ukraine'
+    WHEN LOWER(country) = 'uy' THEN 'Uruguay'
+    WHEN LOWER(country) = 've' THEN 'Venezuela'
+    WHEN LOWER(country) = 'vn' THEN 'Vietnam'
+    WHEN LOWER(country) = 'za' THEN 'South Africa'
+    ELSE country
 END;
 
 -- Normalize country names in staging_happiness
 UPDATE staging_happiness
 SET country_name = CASE
     WHEN country_name IN ('US','U.S.') THEN 'United States'
-    WHEN country_name = 'UK' THEN 'United Kingdom'
+    WHEN country_name LIKE '% (UK)' THEN 'United Kingdom'
     ELSE INITCAP(country_name)
 END;
 
@@ -89,10 +160,13 @@ END;
 ALTER TABLE staging_spotify ADD COLUMN snapshot_date_clean DATE;
 UPDATE staging_spotify
 SET snapshot_date_clean = TO_DATE(snapshot_date,'MM/DD/YYYY');
+-- First, drop the old column
 ALTER TABLE staging_spotify
-    DROP COLUMN snapshot_date,
-    RENAME COLUMN snapshot_date_clean TO snapshot_date;
+    DROP COLUMN snapshot_date;
 
+-- Then, rename the clean column to the original column name
+ALTER TABLE staging_spotify
+    RENAME COLUMN snapshot_date_clean TO snapshot_date;
 --- data casting spotify table
 ALTER TABLE staging_spotify
     ALTER COLUMN daily_rank TYPE INTEGER USING daily_rank::INTEGER,
@@ -134,6 +208,10 @@ SELECT * FROM staging_happiness WHERE country_name  IS NULL OR ladder_score IS N
 
 CREATE TABLE clean_spotify AS SELECT DISTINCT * FROM staging_spotify;
 CREATE TABLE clean_happiness AS SELECT DISTINCT * FROM staging_happiness;
+
+--- Remove data not from 2024 from the clean_spotify table
+DELETE FROM clean_spotify
+WHERE EXTRACT(YEAR FROM snapshot_date) <> 2024;
 
 --- row count after
 SELECT COUNT(*) AS clean_spotify_rows   FROM clean_spotify;
