@@ -58,13 +58,9 @@ CREATE TABLE staging_happiness (
     negative_affect TEXT
 );
 
---- copy the tables into staging tables for cleaning
-INSERT INTO staging_spotify
-SELECT * FROM spotify_songs;
-
-INSERT INTO staging_happiness
-SELECT * FROM world_happiness;
-
+--- load the csv's
+\copy staging_spotify FROM './universal_top_spotify_songs.csv' CSV HEADER;
+\copy staging_happiness FROM './World-happiness-report-2024.csv' CSV HEADER;
 
 --- row count before
 SELECT COUNT(*) AS spotify_rows   FROM staging_spotify;
