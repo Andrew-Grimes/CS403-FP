@@ -4,13 +4,15 @@
 --- DELIVERABLE 1 - DATA LOADING AND CLEANING (LN 4-123)
 --- spotify table for data cleaning
 
+SET ROLE group42;
+SET search_path TO group42;
+
 DROP TABLE IF EXISTS
 clean_spotify,
 clean_happiness,
 staging_spotify,
 staging_happiness;
 
-SET search_path TO group42;
 
 CREATE TABLE staging_spotify (
     spotify_id TEXT,
@@ -56,9 +58,13 @@ CREATE TABLE staging_happiness (
     negative_affect TEXT
 );
 
---- load the csv's
-\copy staging_spotify FROM './universal_top_spotify_songs.csv' CSV HEADER;
-\copy staging_happiness FROM './World-happiness-report-2024.csv' CSV HEADER;
+--- copy the tables into staging tables for cleaning
+INSERT INTO staging_spotify
+SELECT * FROM spotify_songs;
+
+INSERT INTO staging_happiness
+SELECT * FROM world_happiness;
+
 
 --- row count before
 SELECT COUNT(*) AS spotify_rows   FROM staging_spotify;
@@ -159,7 +165,7 @@ END;
 --- standardize data dates
 ALTER TABLE staging_spotify ADD COLUMN snapshot_date_clean DATE;
 UPDATE staging_spotify
-SET snapshot_date_clean = TO_DATE(snapshot_date,'MM/DD/YYYY');
+SET snapshot_date_clean = TO_DATE(snapshot_date,'YYYY-MM-DD');
 -- First, drop the old column
 ALTER TABLE staging_spotify
     DROP COLUMN snapshot_date;
@@ -206,12 +212,8 @@ ALTER TABLE staging_happiness
 SELECT * FROM staging_spotify WHERE country IS NULL OR snapshot_date IS NULL;
 SELECT * FROM staging_happiness WHERE country_name  IS NULL OR ladder_score IS NULL;
 
-CREATE TABLE clean_spotify AS SELECT DISTINCT * FROM staging_spotify;
+CREATE TABLE clean_spotify AS SELECT DISTINCT * FROM staging_spotify WHERE EXTRACT(YEAR FROM snapshot_date) = 2024;
 CREATE TABLE clean_happiness AS SELECT DISTINCT * FROM staging_happiness;
-
---- Remove data not from 2024 from the clean_spotify table
-DELETE FROM clean_spotify
-WHERE EXTRACT(YEAR FROM snapshot_date) <> 2024;
 
 --- row count after
 SELECT COUNT(*) AS clean_spotify_rows   FROM clean_spotify;
