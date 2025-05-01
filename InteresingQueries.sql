@@ -6,8 +6,7 @@
 SET search_path TO group42;
 
 --- Find the average danceability of the top 10 most popular songs per country and compares it to the happiness score of that country
-WITH top_10_songs_per_country AS (
-    -- Select the top 10 most popular songs per country
+WITH top_songs_per_country AS (
     SELECT
         s.country,
         s.danceability,
@@ -16,15 +15,14 @@ WITH top_10_songs_per_country AS (
     FROM clean_spotify s
 ),
 avg_danceability_per_country AS (
-    -- Calculate the average danceability for the top 10 songs per country
     SELECT
         country,
         AVG(danceability) AS avg_danceability
-    FROM top_10_songs_per_country
-    WHERE rank <= 10  -- Select only the top 10 songs per country
+    FROM top_songs_per_country
+    WHERE rank <= 10
     GROUP BY country
 )
--- Join with the happiness scores to compare with ladder score
+SELECT * FROM top_songs_per_country;
 SELECT
     adc.country,
     adc.avg_danceability,
@@ -33,47 +31,47 @@ FROM avg_danceability_per_country adc
 JOIN clean_happiness h ON adc.country = h.country_name
 ORDER BY adc.avg_danceability DESC;
 
--- Compare the happiness score of countries with above and below average liveness
-WITH global_avg_speechiness AS (
-    -- Calculate the global average liveness for all songs
-    SELECT AVG(liveness) AS avg_speechiness
+
+-- Compare the happiness score of countries with above and below average instrumentalness
+WITH global_avg_instrumentalness AS (
+    SELECT AVG(instrumentalness) AS avg_instrumentalness
     FROM clean_spotify
 ),
 top_5_songs_per_country AS (
-    -- Select the top 5 most popular songs for each country and calculate average liveness
     SELECT
         s.country,
-        AVG(s.liveness) AS avg_speechiness
+        AVG(s.instrumentalness) AS avg_instrumentalness
+
     FROM clean_spotify s
     GROUP BY s.country
-    HAVING COUNT(s.spotify_id) >= 5  -- Only include countries with at least 5 songs
+    HAVING COUNT(s.spotify_id) >= 5
 ),
 classified_countries AS (
-    -- Classify countries into below and above average liveness
     SELECT
         t.country,
         CASE
-            WHEN t.avg_speechiness < (SELECT avg_speechiness FROM global_avg_speechiness) THEN 'Below Average'
+            WHEN t.avg_instrumentalness
+     < (SELECT avg_instrumentalness
+     FROM global_avg_instrumentalness) THEN 'Below Average'
             ELSE 'Above Average'
-        END AS speechiness_group
+        END AS instrumentalness_group
     FROM top_5_songs_per_country t
 )
--- Compare the average happiness score of the two groups
 SELECT
-    speechiness_group,
+    instrumentalness_group,
     AVG(h.ladder_score) AS avg_happiness_score
 FROM classified_countries c
 JOIN clean_happiness h ON c.country = h.country_name
-GROUP BY speechiness_group
+GROUP BY instrumentalness_group
 ORDER BY avg_happiness_score DESC;
 
+
+-- Compare the popularity score of songs with above and below average danceability
 WITH global_avg_danceability AS (
-    -- Calculate the global average danceability for all songs
     SELECT AVG(danceability) AS global_avg_danceability
     FROM clean_spotify
 ),
 grouped_by_danceability AS (
-    -- Group songs based on whether their danceability is above or below the global average
     SELECT
         s.popularity,
         s.danceability,
@@ -83,13 +81,16 @@ grouped_by_danceability AS (
         END AS danceability_group
     FROM clean_spotify s
 )
--- Now calculate the average popularity for each group (low vs. high danceability)
 SELECT
     danceability_group,
     AVG(popularity) AS avg_popularity
 FROM grouped_by_danceability
 GROUP BY danceability_group
 ORDER BY avg_popularity DESC;
+
+
+
+
 
 -- Compare the happiness score of countries with above and below average perception of corruption
 WITH corruption_categories AS (
